@@ -33,3 +33,18 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+
+class Module(models.Model):
+    course = models.ForeignKey(Course,
+                               related_name='modules',
+                               on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
