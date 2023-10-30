@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from .fields import OrderField
 
 
 class Subject(models.Model):
@@ -45,11 +46,14 @@ class Module(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
+    # Упорядочивание содержимого модуля
+    order = OrderField(blank=True, for_fields=['course'])
+
     class Meta:
-        ordering = ['title']
+        ordering = ['order']
 
     def __str__(self):
-        return self.title
+        return f'{self.order}. {self.title}'
     
 
 class Content(models.Model):
@@ -66,6 +70,12 @@ class Content(models.Model):
                                             'file')})
     object_id = models.PositiveIntegerField()
     item = GenericForeignKey('content_type', 'object_id')
+
+    # Порядок содержимого вычисляется относительно модуля
+    order = OrderField(blank=True, for_fields=['module'])
+
+    class Meta:
+        ordering = ['order']
 
 
 # Абстрактная модель с полями owner, created, updated, от которой 
