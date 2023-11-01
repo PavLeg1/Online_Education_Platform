@@ -16,6 +16,8 @@ urlpatterns = [
     path('course/', include('courses.urls')),
 
     path('', CourseListView.as_view(), name='course_list'),
+
+    path('students/', include('students.urls')),
 ]
 
 # Добавили функцию static чтобы раздавать файлы во время разработки встроенным сервером разработки
