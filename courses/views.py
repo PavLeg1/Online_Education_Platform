@@ -14,6 +14,7 @@ from django.db.models import Count
 from .models import Subject
 from django.views.generic.detail import DetailView
 from students.forms import CourseEnrollForm
+from django.core.cache import cache
 
 
 # Примесный класс
@@ -223,16 +224,35 @@ class CourseListView(TemplateResponseMixin, View):
     template_name = 'courses/course/list.html'
 
     def get(self, request, subject=None):
-        # извлекаются все предметы, чтобы вставить число курсов по каждому
-        subjects = Subject.objects.annotate(
-            total_courses=Count('courses'))
-        
-        courses = Course.objects.annotate(
-            tatol_modules=Count('modules'))
-        
+        # Пытаемся получить клбч из all_subjects кеша
+        # Если нет ключа - None
+        # Если не найден, то выполняем запрос на извлечение 
+        # всех Subject и их число курсов, результат кешируется  
+        subjects = cache.get('all_subjects')
+        if not subjects:
+            # извлекаются все предметы, чтобы вставить число курсов по каждому
+            subjects = Subject.objects.annotate(
+                total_courses=Count('courses'))
+            cache.set('all_subjects', subjects)
+
+        all_courses = Course.objects.annotate(
+            total_modules=Count('modules'))
+
+        # Если предмет есть - ключ создается динамически
         if subject:
             subject = get_object_or_404(Subject, slug=subject)
-            courses = courses.filter(subject=subject)
+            key = f'subject_{subject.id}_courses'
+            courses = cache.get(key)
+            if not courses:
+                courses = all_courses.filter(subject=subject)
+                cache.set(key, courses)
+        # Если ключа нет - все курсы кэшируются ключом all_courses
+        else:
+            courses = cache.get('all_courses')
+            if not courses:
+                courses = all_courses
+                cache.set('all_courses', courses)
+
         return self.render_to_response({
             'subjects': subjects,
             'subject': subject,
