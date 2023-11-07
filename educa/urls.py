@@ -20,6 +20,8 @@ urlpatterns = [
     path('students/', include('students.urls')),
 
     path('__debug__/', include('debug_toolbar.urls')),
+
+    path('api/', include('courses.api.urls', namespace='api')),
 ]
 
 # Добавили функцию static чтобы раздавать файлы во время разработки встроенным сервером разработки
